@@ -15,6 +15,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
+/**
+ * The NMS helper for all the Book-API
+ */
 public final class NmsBookHelper {
     private static final String version;
 
@@ -81,6 +84,11 @@ public final class NmsBookHelper {
     }
 
 
+    /**
+     * Sets the pages of the book to the components json equivalent
+     * @param meta the book meta to change
+     * @param components the pages of the book
+     */
     @SuppressWarnings("unchecked")//reflections = unchecked warnings
     public static void setPages(BookMeta meta, BaseComponent[][] components) {
         try {
@@ -96,6 +104,12 @@ public final class NmsBookHelper {
         }
     }
 
+    /**
+     * Opens the book to a player (the player needs to have the book in one of his hands)
+     * @param player the player
+     * @param book the book to open
+     * @param offHand false if the book is in the right hand, true otherwise
+     */
     public static void openBook(Player player, ItemStack book, boolean offHand) {
         //nms(player).openBook(nms(player), nms(book), hand);
         try {
@@ -127,16 +141,31 @@ public final class NmsBookHelper {
         }
     }*/
 
+    /**
+     * Translates an ItemStack to his Chat-Component equivalent
+     * @param item the item to be converted
+     * @return a Chat-Component equivalent of the parameter
+     */
     public static BaseComponent[] itemToComponents(ItemStack item) {
        return jsonToComponents(itemToJson(item));
     }
 
+    /**
+     * Translates a json string to his Chat-Component equivalent
+     * @param json the json string to be converted
+     * @return a Chat-Component equivalent of the parameter
+     */
     public static BaseComponent[] jsonToComponents(String json) {
         return new BaseComponent[] {
                 new TextComponent(json)
         };
     }
 
+    /**
+     * Translates an ItemStack to his json equivalent
+     * @param item the item to be converted
+     * @return a json equivalent of the parameter
+     */
     private static String itemToJson(ItemStack item) {
         try {
             //net.minecraft.server.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
@@ -153,8 +182,13 @@ public final class NmsBookHelper {
         }
     }
 
-
-    private static class UnsupportedVersionException extends RuntimeException {
+    /**
+     * An error thrown when this NMS-helper class doesn't support the running MC version
+     */
+    public static class UnsupportedVersionException extends RuntimeException {
+        /**
+         * The current running version
+         */
         @Getter
         private final String version = NmsBookHelper.version;
 
@@ -164,10 +198,24 @@ public final class NmsBookHelper {
     }
 
 
+    /**
+     * Gets the EntityPlayer handled by the argument
+     * @param player the Player handler
+     * @return the handled class
+     * @throws InvocationTargetException when some problems are found with the reflection
+     * @throws IllegalAccessException when some problems are found with the reflection
+     */
     public static Object toNms(Player player) throws InvocationTargetException, IllegalAccessException {
         return craftPlayerGetHandle.invoke(player);
     }
 
+    /**
+     * Creates a NMS copy of the parameter
+     * @param item the ItemStack to be nms-copied
+     * @return a NMS-ItemStack that is the equivalent of the one passed as argument
+     * @throws InvocationTargetException when some problems are found with the reflection
+     * @throws IllegalAccessException when some problems are found with the reflection
+     */
     public static Object nmsCopy(ItemStack item) throws InvocationTargetException, IllegalAccessException {
         return craftItemStackAsNMSCopy.invoke(null, item);
     }

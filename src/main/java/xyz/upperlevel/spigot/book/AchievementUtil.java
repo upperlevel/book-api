@@ -2,13 +2,14 @@ package xyz.upperlevel.spigot.book;
 
 import org.bukkit.Achievement;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.bukkit.Achievement.*;
 
 public final class AchievementUtil {
-    private static final Map<Achievement, String> achievements = new HashMap<Achievement, String>() {{
+    private static final Map<Achievement, String> achievements = new EnumMap<Achievement, String>(Achievement.class) {{
         put(OPEN_INVENTORY, "openInventory");
         put(MINE_WOOD, "mineWood");
         put(BUILD_WORKBENCH, "buildWorkBench");
@@ -46,6 +47,11 @@ public final class AchievementUtil {
     }};
 
 
+    /**
+     * Gets the json id from the bukkit achievement passed as argument
+     * @param achievement the achievement
+     * @return the achievement's id or null if not found
+     */
     public static String toId(Achievement achievement) {
         return achievements.get(achievement);
     }
