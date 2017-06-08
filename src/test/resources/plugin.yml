@@ -1,0 +1,8 @@
+name: BookApiExample
+main: xyz.upperlevel.spigot.book.example.Main
+version: 1.1
+author: upperlevel
+commands:
+  booktest:
+    description: Tests the bookapi
+    usage: /booktest <color|hover|command|link|game|general>
