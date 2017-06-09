@@ -24,12 +24,8 @@ public class Main extends JavaPlugin {
         @Override
         public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
             if (sender instanceof Player) {
-                if(args.length < 1) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /booktest <color|hover|command|link|game|general>");
-                    return true;
-                }
+                ItemStack book = createGeneralBook((Player) sender, args.length < 1 ? "" : args[0]);
 
-                ItemStack book = createGeneralBook((Player) sender, args[0]);
                 BookUtil.openPlayer((Player) sender, book);
             }
 
@@ -51,7 +47,7 @@ public class Main extends JavaPlugin {
                 case "general":
                     return createGeneralBook(p);
                 default:
-                    return null;
+                    return createPresentationBook(p);
             }
         }
 
@@ -284,6 +280,112 @@ public class Main extends JavaPlugin {
                                     .add("TextBuilder's page")
                                     .newLine().newLine()
                                     .add("Isn't this amazing?")
+                                    .build()
+                    )
+                    .build();
+        }
+
+        private ItemStack createPresentationBook(Player p) {
+            return BookUtil.writtenBook()
+                    .author("SnowyCoder")
+                    .title("The Test-ament")
+                    .pages(
+                            new BookUtil.PageBuilder()
+                                    .add(
+                                            BookUtil.TextBuilder.of("     Introduction") //5 spaces = center align
+                                                    .color(ChatColor.AQUA)
+                                                    .style(ChatColor.BOLD, ChatColor.ITALIC)
+                                                    .onHover(BookUtil.HoverAction.showText("This is the BookApi introduction"))
+                                                    .build()
+                                    )
+                                    .newLine()
+                                    .newLine()
+                                    .add(
+                                            BookUtil.TextBuilder.of("Hello")
+                                                    .color(ChatColor.RED)
+                                                    .build()
+
+                                    )
+                                    .add(
+                                            BookUtil.TextBuilder.of(" There")
+                                                    .color(ChatColor.BLUE)
+                                                    .build()
+                                    )
+                                    .newLine()
+                                    .add("This ")
+                                    .add(
+                                            BookUtil.TextBuilder.of("API")
+                                                    .color(ChatColor.BLUE)
+                                                    .style(ChatColor.BOLD)
+                                                    .onClick(BookUtil.ClickAction.openUrl("https://github.com/upperlevel/spigot-book-api"))
+                                                    .onHover(BookUtil.HoverAction.showText("Go to BookApi's site!"))
+                                                    .build()
+                                    )
+                                    .add(" supports ")
+                                    .add(
+                                            BookUtil.TextBuilder.of("links")
+                                                    .color(ChatColor.GOLD)
+                                                    .style(ChatColor.ITALIC)
+                                                    .onClick(BookUtil.ClickAction.openUrl("https://www.spigotmc.org"))
+                                                    .onHover(BookUtil.HoverAction.showText("Open spigot!"))
+                                                    .build()
+                                    )
+                                    .add(", ")
+                                    .add(
+                                            BookUtil.TextBuilder.of("page links")
+                                                    .color(ChatColor.RED)
+                                                    .style(ChatColor.ITALIC)
+                                                    .onClick(BookUtil.ClickAction.changePage(2))
+                                                    .onHover(BookUtil.HoverAction.showText("Go to the second page"))
+                                                    .build()
+                                    )
+                                    .add(", ")
+                                    .add(
+                                            BookUtil.TextBuilder.of("commands")
+                                                    .color(ChatColor.BLUE)
+                                                    .style(ChatColor.ITALIC)
+                                                    .onClick(BookUtil.ClickAction.runCommand("/kick " + p.getName()))
+                                                    .onHover(BookUtil.HoverAction.showText("Go out of the server"))
+                                                    .build()
+                                    )
+                                    .add(" and everything that the MC protocol offers!")
+                                    .newLine()
+                                    .add("I think that ")
+                                    .add(
+                                            BookUtil.TextBuilder.of("YOU")
+                                                    .color(ChatColor.GOLD)
+                                                    .style(ChatColor.BOLD, ChatColor.UNDERLINE, ChatColor.ITALIC)
+                                                    .onClick(BookUtil.ClickAction.openUrl("https://www.google.it/search?q=you're+awesome"))
+                                                    .onHover(BookUtil.HoverAction.showText(ChatColor.GOLD + "You're awesome!"))
+                                                    .build()
+                                    )
+                                    .add(" should use ")
+                                    .add(
+                                            BookUtil.TextBuilder.of("this API")
+                                                    .color(ChatColor.AQUA)
+                                                    .style(ChatColor.BOLD)
+                                                    .onClick(BookUtil.ClickAction.openUrl("https://www.spigotmc.org/resources/commandapi.41052"))
+                                                    .onHover(BookUtil.HoverAction.showText("Go in the main page"))
+                                                    .build()
+                                    )
+                                    .build(),
+                            new BookUtil.PageBuilder()
+                                    .add(
+                                            BookUtil.TextBuilder.of("Hey")
+                                                    .color(ChatColor.RED)
+                                                    .build()
+                                    )
+                                    .newLine()
+                                    .add("This book has a second page!")
+                                    .newLine()
+                                    .add(
+                                            BookUtil.TextBuilder.of("Go back")
+                                                    .color(ChatColor.BLUE)
+                                                    .style(ChatColor.ITALIC)
+                                                    .onHover(BookUtil.HoverAction.showText("Return to the main page"))
+                                                    .onClick(BookUtil.ClickAction.changePage(1))
+                                                    .build()
+                                    )
                                     .build()
                     )
                     .build();
