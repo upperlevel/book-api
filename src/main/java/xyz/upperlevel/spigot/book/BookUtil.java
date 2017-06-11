@@ -10,6 +10,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Achievement;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -26,12 +27,20 @@ public final class BookUtil {
      * @param book the book to be opened
      */
     public static void openPlayer(Player p, ItemStack book) {
+        CustomBookOpenEvent event = new CustomBookOpenEvent(p, book, false);
+        //Call the CustomBookOpenEvent
+        Bukkit.getPluginManager().callEvent(event);
+        //Check if it's cancelled
+        if(event.isCancelled())
+            return;
+        p.closeInventory();
+        //Store the previous item
         ItemStack hand = p.getItemInHand();
 
-        p.setItemInHand(book);
+        p.setItemInHand(event.getBook());
 
         //Opening the GUI
-        NmsBookHelper.openBook(p, book, false);
+        NmsBookHelper.openBook(p, event.getBook(), event.getHand() == CustomBookOpenEvent.Hand.OFF_HAND);
 
         //Returning whatever was on hand.
         p.setItemInHand(hand);
