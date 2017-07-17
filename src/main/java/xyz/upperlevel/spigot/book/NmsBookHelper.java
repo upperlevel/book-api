@@ -5,6 +5,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
@@ -14,20 +15,27 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The NMS helper for all the Book-API
  */
 public final class NmsBookHelper {
     private static final String version;
+    private static final boolean doubleHands;
 
     private static final Class<?> craftMetaBookClass;
     private static final Field craftMetaBookField;
     private static final Method chatSerializerA;
 
     private static final Method craftPlayerGetHandle;
+    //This method takes an enum that represents the player's hand only in versions >= 1.9
+    //In the other versions it only takes the nms item
     private static final Method entityPlayerOpenBook;
+    //only version >= 1.9
     private static final Object[] hands;
+
 
     //Older versions
     /*private static final Field entityHumanPlayerConnection;
@@ -43,15 +51,24 @@ public final class NmsBookHelper {
 
     static {
         version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+        final int major, minor;
+        Pattern pattern = Pattern.compile("v([0-9]+)_([0-9]+)");
+        Matcher m = pattern.matcher(version);
+        if(m.find()) {
+            major = Integer.parseInt(m.group(1));
+            minor = Integer.parseInt(m.group(2));
+        } else {
+            throw new IllegalStateException("Cannot parse version \"" + version + "\", make sure it follows \"v<major>_<minor>...\"");
+        }
+        doubleHands = major <= 1 && minor >= 9;
         try {
             craftMetaBookClass = getCraftClass("inventory.CraftMetaBook");
             craftMetaBookField = craftMetaBookClass.getDeclaredField("pages");
-            Class<?> chatSerializer;
-            try {
-                chatSerializer = getNmsClass("IChatBaseComponent$ChatSerializer");
-            } catch (Exception e) {
+            craftMetaBookField.setAccessible(true);
+            Class<?> chatSerializer = getNmsClass("IChatBaseComponent$ChatSerializer", false);
+            if(chatSerializer == null)
                 chatSerializer = getNmsClass("ChatSerializer");
-            }
+
             chatSerializerA = chatSerializer.getDeclaredMethod("a", String.class);
 
             final Class<?> craftPlayerClass = getCraftClass("entity.CraftPlayer");
@@ -59,9 +76,14 @@ public final class NmsBookHelper {
 
             final Class<?> entityPlayerClass = getNmsClass("EntityPlayer");
             final Class<?> itemStackClass = getNmsClass("ItemStack");
-            final Class<?> enumHandClass = getNmsClass("EnumHand");
-            entityPlayerOpenBook = entityPlayerClass.getMethod("a", itemStackClass, enumHandClass);
-            hands = enumHandClass.getEnumConstants();
+            if(doubleHands) {
+                final Class<?> enumHandClass = getNmsClass("EnumHand");
+                entityPlayerOpenBook = entityPlayerClass.getMethod("a", itemStackClass, enumHandClass);
+                hands = enumHandClass.getEnumConstants();
+            } else {
+                entityPlayerOpenBook = entityPlayerClass.getMethod("openBook", itemStackClass);
+                hands = null;
+            }
             //Older versions
             /*entityHumanPlayerConnection = entityPlayerClass.getField("playerConnection");
             final Class<?> playerConnectionClass = getNmsClass("PlayerConnection");
@@ -118,11 +140,18 @@ public final class NmsBookHelper {
                     entityHumanPlayerConnection.get(toNms(player)),
                     createBookOpenPacket()
             );*/
-            entityPlayerOpenBook.invoke(
-                    toNms(player),
-                    nmsCopy(book),
-                    hands[offHand ? 1 : 0]
-            );
+            if(doubleHands) {
+                entityPlayerOpenBook.invoke(
+                        toNms(player),
+                        nmsCopy(book),
+                        hands[offHand ? 1 : 0]
+                );
+            } else {
+                entityPlayerOpenBook.invoke(
+                        toNms(player),
+                        nmsCopy(book)
+                );
+            }
         } catch (Exception e) {
             throw new UnsupportedVersionException(e);
         }
@@ -220,14 +249,20 @@ public final class NmsBookHelper {
         return craftItemStackAsNMSCopy.invoke(null, item);
     }
 
-    public static Class<?> getNmsClass(String className) {
+    public static Class<?> getNmsClass(String className, boolean log) {
         try {
             return Class.forName("net.minecraft.server." + version + "." + className);
         } catch(ClassNotFoundException e) {
-            e.printStackTrace();
+            if(log)
+                e.printStackTrace();
             return null;
         }
     }
+
+    public static Class<?> getNmsClass(String className) {
+        return getNmsClass(className, true);
+    }
+
 
     private static Class<?> getCraftClass(String path) {
         try {

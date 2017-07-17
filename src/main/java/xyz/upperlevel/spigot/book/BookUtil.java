@@ -21,11 +21,25 @@ import org.bukkit.inventory.meta.BookMeta;
 import java.util.*;
 
 public final class BookUtil {
+    private static final boolean canTranslateDirectly;
+
+    static {
+        boolean success = true;
+        try {
+            ChatColor.BLACK.asBungee();
+        } catch (NoSuchMethodError e) {
+            success = false;
+        }
+        canTranslateDirectly = success;
+    }
+
+
     /**
      * Opens a book GUI to the player
      * @param p the player
      * @param book the book to be opened
      */
+    @SuppressWarnings("deprecation")
     public static void openPlayer(Player p, ItemStack book) {
         CustomBookOpenEvent event = new CustomBookOpenEvent(p, book, false);
         //Call the CustomBookOpenEvent
@@ -38,12 +52,14 @@ public final class BookUtil {
         ItemStack hand = p.getItemInHand();
 
         p.setItemInHand(event.getBook());
+        p.updateInventory();
 
         //Opening the GUI
         NmsBookHelper.openBook(p, event.getBook(), event.getHand() == CustomBookOpenEvent.Hand.OFF_HAND);
 
         //Returning whatever was on hand.
         p.setItemInHand(hand);
+        p.updateInventory();
     }
 
     /**
@@ -298,8 +314,12 @@ public final class BookUtil {
                 res.setClickEvent(new ClickEvent(onClick.action(), onClick.value()));
             if(onHover != null)
                 res.setHoverEvent(new HoverEvent(onHover.action(), onHover.value()));
-            if(color != null)
-                res.setColor(color.asBungee());
+            if(color != null) {
+                if (canTranslateDirectly)
+                    res.setColor(color.asBungee());
+                else
+                    res.setColor(net.md_5.bungee.api.ChatColor.getByChar(color.getChar()));
+            }
             if(style != null) {
                 for(ChatColor c : style) {
                     switch (c) {
