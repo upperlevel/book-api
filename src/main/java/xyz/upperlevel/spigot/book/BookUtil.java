@@ -381,7 +381,7 @@ public final class BookUtil {
         }
 
         /**
-         * Creates a suggest_command action: when the player clicks, the book closes and the chat opens with the parameter written into it
+         * Creates a suggest_command action: when the player clicks, the book should close and open chat with the parameter written into it
          * @param command the command to be suggested
          * @return a new ClickAction
          *
