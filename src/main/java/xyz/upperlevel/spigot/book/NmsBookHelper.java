@@ -53,18 +53,12 @@ public final class NmsBookHelper {
 
     static {
         version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-        final int major, minor, minorMinor;
+        final int major, minor;
         Pattern pattern = Pattern.compile("v([0-9]+)_([0-9]+)");
         Matcher m = pattern.matcher(version);
         if (m.find()) {
             major = Integer.parseInt(m.group(1));
             minor = Integer.parseInt(m.group(2));
-
-            if (m.groupCount() > 2) {
-                minorMinor = Integer.parseInt(m.group(3));
-            } else {
-                minorMinor = -1;
-            }
         } else {
             throw new IllegalStateException(
                     "Cannot parse version \"" + version + "\", make sure it follows \"v<major>_<minor>...\"");
@@ -88,11 +82,15 @@ public final class NmsBookHelper {
             if (doubleHands) {
                 final Class<?> enumHandClass = getNmsClass("EnumHand");
 
-                if (!is_1_14_4_OrNewer(major, minor, minorMinor)) {
-                    entityPlayerOpenBook = entityPlayerClass.getMethod("a", itemStackClass, enumHandClass);
-                } else {
-                    entityPlayerOpenBook = entityPlayerClass.getMethod("openBook", itemStackClass, enumHandClass);
+                Method openBookMethod;
+
+                try {
+                    openBookMethod = entityPlayerClass.getMethod("a", itemStackClass, enumHandClass);
+                } catch (NoSuchMethodException e) {
+                    openBookMethod = entityPlayerClass.getMethod("openBook", itemStackClass, enumHandClass);
                 }
+
+                entityPlayerOpenBook = openBookMethod;
 
                 hands = enumHandClass.getEnumConstants();
             } else {
@@ -123,18 +121,6 @@ public final class NmsBookHelper {
         } catch (Exception e) {
             throw new IllegalStateException("Cannot initiate reflections for " + version, e);
         }
-    }
-
-    private static boolean is_1_14_4_OrNewer(int major, int minor, int minorMinor) {
-        if (major <= 1) {
-            if (minor == 14) {
-                return minorMinor >= 4;
-            }
-
-            return minor > 14;
-        }
-
-        return true;
     }
 
     /**
