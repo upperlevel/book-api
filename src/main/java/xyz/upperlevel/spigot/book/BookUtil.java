@@ -381,10 +381,13 @@ public final class BookUtil {
         }
 
         /**
-         * Creates a suggest_command action: when the player clicks, the book closes and the chat opens with the parameter written into it
+         * Creates a suggest_command action: when the player clicks, the book should close and open chat with the parameter written into it
          * @param command the command to be suggested
          * @return a new ClickAction
+         *
+         * @deprecated suggest_command does not work in books, this was marked as "Working As Intended" by mojang: See <a href="https://bugs.mojang.com/browse/MC-70317">MC-70317</a>
          */
+        @Deprecated
         static ClickAction suggestCommand(String command) {
             return new SimpleClickAction(ClickEvent.Action.SUGGEST_COMMAND, command);
         }
