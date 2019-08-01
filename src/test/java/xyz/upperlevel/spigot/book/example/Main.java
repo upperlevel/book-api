@@ -36,8 +36,6 @@ public class Main extends JavaPlugin {
             switch (type.toLowerCase()) {
                 case "color":
                     return createColorBook(p);
-                case "hover":
-                    return createHoverBook(p);
                 case "command":
                     return createCommandBook(p);
                 case "link":
@@ -114,30 +112,6 @@ public class Main extends JavaPlugin {
                     .build();
         }
 
-        private ItemStack createHoverBook(Player p) {
-            return BookUtil.writtenBook()
-                    .author("SnowyCoder")
-                    .title("SHoverIt")
-                    .pages(
-                            new BookUtil.PageBuilder()
-                                    .add(
-                                            BookUtil.TextBuilder.of("Look at my horse!")
-                                                    .onHover(BookUtil.HoverAction.showItem(getHorseItem()))
-                                                    .color(ChatColor.RED)
-                                                    .build()
-                                    )
-                                    .newLine()
-                                    .add(
-                                            BookUtil.TextBuilder.of("My horse is amazing")
-                                                    .onHover(BookUtil.HoverAction.showEntity(p))
-                                                    .color(ChatColor.BLUE)
-                                                    .build()
-                                    )
-                                    .build()
-                    )
-                    .build();
-        }
-
         private ItemStack getHorseItem() {
             ItemStack item = new ItemStack(Material.MONSTER_EGG);
             SpawnEggMeta meta = (SpawnEggMeta) item.getItemMeta();
@@ -153,8 +127,8 @@ public class Main extends JavaPlugin {
                     .pages(
                             new BookUtil.PageBuilder()
                                     .add(
-                                            BookUtil.TextBuilder.of("Kill yasself")
-                                                    .onHover(BookUtil.HoverAction.showText("Do it!"))
+                                            BookUtil.TextBuilder.of("Suicide")
+                                                    .onHover(BookUtil.HoverAction.showText("Wannt to try?"))
                                                     .onClick(BookUtil.ClickAction.runCommand("/kill"))
                                                     .color(ChatColor.RED)
                                                     .build()
@@ -272,7 +246,7 @@ public class Main extends JavaPlugin {
                                                     .color(ChatColor.AQUA)
                                                     .style(ChatColor.BOLD)
                                                     .onClick(BookUtil.ClickAction.runCommand("/kill"))//lol
-                                                    .onHover(BookUtil.HoverAction.showText("Kill yasself"))
+                                                    .onHover(BookUtil.HoverAction.showText("Simulate suicide"))
                                                     .build()
                                     )
                                     .build(),
