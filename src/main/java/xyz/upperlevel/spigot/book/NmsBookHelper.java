@@ -69,8 +69,9 @@ public final class NmsBookHelper {
             craftMetaBookField = craftMetaBookClass.getDeclaredField("pages");
             craftMetaBookField.setAccessible(true);
             Class<?> chatSerializer = getNmsClass("IChatBaseComponent$ChatSerializer", false);
-            if (chatSerializer == null)
+            if (chatSerializer == null) {
                 chatSerializer = getNmsClass("ChatSerializer");
+            }
 
             chatSerializerA = chatSerializer.getDeclaredMethod("a", String.class);
 
@@ -85,6 +86,8 @@ public final class NmsBookHelper {
                 Method openBookMethod;
 
                 try {
+                    // In 1.14.4 The method was renamed from "a" to "openBook"
+                    // There is no way to test for the "fix" number in the version so we just try-catch it
                     openBookMethod = entityPlayerClass.getMethod("a", itemStackClass, enumHandClass);
                 } catch (NoSuchMethodException e) {
                     openBookMethod = entityPlayerClass.getMethod("openBook", itemStackClass, enumHandClass);
@@ -136,7 +139,6 @@ public final class NmsBookHelper {
             pages.clear();
             for (BaseComponent[] c : components) {
                 final String json = ComponentSerializer.toString(c);
-                // System.out.println("page:" + json); //Debug
                 pages.add(chatSerializerA.invoke(null, json));
             }
         } catch (Exception e) {
@@ -267,26 +269,26 @@ public final class NmsBookHelper {
         return craftItemStackAsNMSCopy.invoke(null, item);
     }
 
-    public static Class<?> getNmsClass(String className, boolean log) {
+    public static Class<?> getNmsClass(String className, boolean required) {
         try {
             return Class.forName("net.minecraft.server." + version + "." + className);
         } catch (ClassNotFoundException e) {
-            if (log)
-                e.printStackTrace();
+            if (required) {
+                throw new RuntimeException("Cannot find NMS class " + className, e);
+            }
             return null;
         }
     }
 
     public static Class<?> getNmsClass(String className) {
-        return getNmsClass(className, true);
+        return getNmsClass(className, false);
     }
 
     private static Class<?> getCraftClass(String path) {
         try {
             return Class.forName("org.bukkit.craftbukkit." + version + "." + path);
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException("Cannot find CraftBukkit class at path: " + path, e);
         }
     }
 }
