@@ -64,7 +64,8 @@ public final class BookUtil {
 
     /**
      * Creates a BookBuilder instance with a written book as the Itemstack's type
-     * @return
+     *
+     * @return A book builder with the material of {@link Material#WRITTEN_BOOK}
      */
     public static BookBuilder writtenBook() {
         return new BookBuilder(new ItemStack(Material.WRITTEN_BOOK));
