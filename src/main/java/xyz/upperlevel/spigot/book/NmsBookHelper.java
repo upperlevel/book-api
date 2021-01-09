@@ -157,16 +157,14 @@ public final class NmsBookHelper {
                 pages.clear();
             }
             for (BaseComponent[] c : components) {
+                final String json;
                 if (craftMetaBookInternalAddPageMethod != null) {
-                    if (c == null) {
-                        continue;
-                    }
-                    final String json = ComponentSerializer.toString(c);
+                    json = c != null ? ComponentSerializer.toString(c) : "";
                     craftMetaBookInternalAddPageMethod.invoke(meta, json);
                 }
                 else {
-                    final String json = ComponentSerializer.toString(c);
-                    //noinspection ConstantConditions
+                    BaseComponent[] nonNullC = c != null ? c : jsonToComponents("");
+                    json = ComponentSerializer.toString(nonNullC);
                     pages.add(chatSerializerA.invoke(null, json));
                 }
             }
