@@ -27,9 +27,10 @@ public final class NmsBookHelper {
 
     private static final Class<?> craftMetaBookClass;
     private static final Field craftMetaBookField;
+    // Converts JSON string to IChatBaseComponent
     private static final Method chatSerializerA;
 
-    //nullable
+    // Only present in versions >= 1.16.4 (otherwise null)
     private static final Method craftMetaBookInternalAddPageMethod;
 
     private static final Method craftPlayerGetHandle;
@@ -39,15 +40,6 @@ public final class NmsBookHelper {
     private static final Method entityPlayerOpenBook;
     // only version >= 1.9
     private static final Object[] hands;
-
-    // Older versions
-    /*
-     * private static final Field entityHumanPlayerConnection; private static final
-     * Method playerConnectionSendPacket;
-     *
-     * private static final Constructor<?> packetPlayOutCustomPayloadConstructor;
-     * private static final Constructor<?> packetDataSerializerConstructor;
-     */
 
     private static final Method nmsItemStackSave;
     private static final Constructor<?> nbtTagCompoundConstructor;
@@ -79,9 +71,9 @@ public final class NmsBookHelper {
                 cmbInternalAddMethod = craftMetaBookClass.getDeclaredMethod("internalAddPage", String.class);
                 cmbInternalAddMethod.setAccessible(true);
             } catch (NoSuchMethodException e) {
-                //Internal data change in 1.16.4
-                //To detect if the server is using the new internal format we check if the internalAddPageMethod exists
-                //see https://hub.spigotmc.org/stash/projects/SPIGOT/repos/craftbukkit/commits/560b65c4f8a15619aaa4a1737c7040f21e725cce
+                // Internal data change in 1.16.4
+                // To detect if the server is using the new internal format we check if the internalAddPageMethod exists
+                // see https://hub.spigotmc.org/stash/projects/SPIGOT/repos/craftbukkit/commits/560b65c4f8a15619aaa4a1737c7040f21e725cce
             }
             craftMetaBookInternalAddPageMethod = cmbInternalAddMethod;
 
@@ -90,6 +82,8 @@ public final class NmsBookHelper {
                 chatSerializer = getNmsClass("ChatSerializer");
             }
 
+            // On versions < 1.16.4 the CraftMetaBook accepted IChatBaseComponent
+            // This method converts JSON strings to its IChatBaseComponent equivalent
             chatSerializerA = chatSerializer.getDeclaredMethod("a", String.class);
 
             final Class<?> craftPlayerClass = getCraftClass("entity.CraftPlayer");
@@ -117,19 +111,6 @@ public final class NmsBookHelper {
                 entityPlayerOpenBook = entityPlayerClass.getMethod("openBook", itemStackClass);
                 hands = null;
             }
-            // Older versions
-            /*
-             * entityHumanPlayerConnection = entityPlayerClass.getField("playerConnection");
-             * final Class<?> playerConnectionClass = getNmsClass("PlayerConnection");
-             * playerConnectionSendPacket = playerConnectionClass.getMethod("sendPacket",
-             * getNmsClass("Packet"));
-             *
-             * final Class<?> packetDataSerializerClasss =
-             * getNmsClass("PacketDataSerializer"); packetPlayOutCustomPayloadConstructor =
-             * getNmsClass("PacketPlayOutCustomPayload").getConstructor(String.class,
-             * packetDataSerializerClasss); packetDataSerializerConstructor =
-             * packetDataSerializerClasss.getConstructor(ByteBuf.class);
-             */
 
             final Class<?> craftItemStackClass = getCraftClass("inventory.CraftItemStack");
             craftItemStackAsNMSCopy = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
@@ -137,7 +118,6 @@ public final class NmsBookHelper {
             Class<?> nbtTagCompoundClazz = getNmsClass("NBTTagCompound");
             nmsItemStackSave = nmsItemStackClazz.getMethod("save", nbtTagCompoundClazz);
             nbtTagCompoundConstructor = nbtTagCompoundClazz.getConstructor();
-
         } catch (Exception e) {
             throw new IllegalStateException("Cannot initiate reflections for " + version, e);
         }
@@ -161,8 +141,7 @@ public final class NmsBookHelper {
                 if (craftMetaBookInternalAddPageMethod != null) {
                     json = c != null ? ComponentSerializer.toString(c) : "";
                     craftMetaBookInternalAddPageMethod.invoke(meta, json);
-                }
-                else {
+                } else {
                     BaseComponent[] nonNullC = c != null ? c : jsonToComponents("");
                     json = ComponentSerializer.toString(nonNullC);
                     pages.add(chatSerializerA.invoke(null, json));
@@ -184,11 +163,6 @@ public final class NmsBookHelper {
     public static void openBook(Player player, ItemStack book, boolean offHand) {
         // nms(player).openBook(nms(player), nms(book), hand);
         try {
-            // Older versions:
-            /*
-             * playerConnectionSendPacket.invoke(
-             * entityHumanPlayerConnection.get(toNms(player)), createBookOpenPacket() );
-             */
             if (doubleHands) {
                 entityPlayerOpenBook.invoke(toNms(player), nmsCopy(book), hands[offHand ? 1 : 0]);
             } else {
@@ -198,16 +172,6 @@ public final class NmsBookHelper {
             throw new UnsupportedVersionException(e);
         }
     }
-
-    // Older versions
-    /*
-     * public static Object createBookOpenPacket() { //new
-     * PacketPlayOutCustomPayload("MC|BOpen", new
-     * PacketDataSerializer(Unpooled.buffer()))); try { return
-     * packetPlayOutCustomPayloadConstructor.newInstance( "MC|BOpen",
-     * packetDataSerializerConstructor.newInstance(Unpooled.buffer()) ); } catch
-     * (Exception e) { throw new UnsupportedVersionException(e); } }
-     */
 
     /**
      * Translates an ItemStack to his Chat-Component equivalent
