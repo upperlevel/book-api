@@ -5,7 +5,6 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.block.banner.PatternType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
@@ -22,12 +21,16 @@ import java.util.regex.Pattern;
  * The NMS helper for all the Book-API
  */
 public final class NmsBookHelper {
+
     private static final String version;
     private static final boolean doubleHands;
 
     private static final Class<?> craftMetaBookClass;
     private static final Field craftMetaBookField;
     private static final Method chatSerializerA;
+
+    //nullable
+    private static final Method craftMetaBookInternalAddPageMethod;
 
     private static final Method craftPlayerGetHandle;
     // This method takes an enum that represents the player's hand only in versions
@@ -41,7 +44,7 @@ public final class NmsBookHelper {
     /*
      * private static final Field entityHumanPlayerConnection; private static final
      * Method playerConnectionSendPacket;
-     * 
+     *
      * private static final Constructor<?> packetPlayOutCustomPayloadConstructor;
      * private static final Constructor<?> packetDataSerializerConstructor;
      */
@@ -66,8 +69,22 @@ public final class NmsBookHelper {
         doubleHands = major <= 1 && minor >= 9;
         try {
             craftMetaBookClass = getCraftClass("inventory.CraftMetaBook");
+
             craftMetaBookField = craftMetaBookClass.getDeclaredField("pages");
             craftMetaBookField.setAccessible(true);
+
+            Method cmbInternalAddMethod = null;
+            try {
+                //method is protected
+                cmbInternalAddMethod = craftMetaBookClass.getDeclaredMethod("internalAddPage", String.class);
+                cmbInternalAddMethod.setAccessible(true);
+            } catch (NoSuchMethodException e) {
+                //Internal data change in 1.16.4
+                //To detect if the server is using the new internal format we check if the internalAddPageMethod exists
+                //see https://hub.spigotmc.org/stash/projects/SPIGOT/repos/craftbukkit/commits/560b65c4f8a15619aaa4a1737c7040f21e725cce
+            }
+            craftMetaBookInternalAddPageMethod = cmbInternalAddMethod;
+
             Class<?> chatSerializer = getNmsClass("IChatBaseComponent$ChatSerializer", false);
             if (chatSerializer == null) {
                 chatSerializer = getNmsClass("ChatSerializer");
@@ -106,7 +123,7 @@ public final class NmsBookHelper {
              * final Class<?> playerConnectionClass = getNmsClass("PlayerConnection");
              * playerConnectionSendPacket = playerConnectionClass.getMethod("sendPacket",
              * getNmsClass("Packet"));
-             * 
+             *
              * final Class<?> packetDataSerializerClasss =
              * getNmsClass("PacketDataSerializer"); packetPlayOutCustomPayloadConstructor =
              * getNmsClass("PacketPlayOutCustomPayload").getConstructor(String.class,
@@ -128,7 +145,7 @@ public final class NmsBookHelper {
 
     /**
      * Sets the pages of the book to the components json equivalent
-     * 
+     *
      * @param meta       the book meta to change
      * @param components the pages of the book
      */
@@ -136,10 +153,20 @@ public final class NmsBookHelper {
     public static void setPages(BookMeta meta, BaseComponent[][] components) {
         try {
             List<Object> pages = (List<Object>) craftMetaBookField.get(meta);
-            pages.clear();
+            if (pages != null) {
+                pages.clear();
+            }
             for (BaseComponent[] c : components) {
-                final String json = ComponentSerializer.toString(c);
-                pages.add(chatSerializerA.invoke(null, json));
+                final String json;
+                if (craftMetaBookInternalAddPageMethod != null) {
+                    json = c != null ? ComponentSerializer.toString(c) : "";
+                    craftMetaBookInternalAddPageMethod.invoke(meta, json);
+                }
+                else {
+                    BaseComponent[] nonNullC = c != null ? c : jsonToComponents("");
+                    json = ComponentSerializer.toString(nonNullC);
+                    pages.add(chatSerializerA.invoke(null, json));
+                }
             }
         } catch (Exception e) {
             throw new UnsupportedVersionException(e);
@@ -149,7 +176,7 @@ public final class NmsBookHelper {
     /**
      * Opens the book to a player (the player needs to have the book in one of his
      * hands)
-     * 
+     *
      * @param player  the player
      * @param book    the book to open
      * @param offHand false if the book is in the right hand, true otherwise
@@ -184,7 +211,7 @@ public final class NmsBookHelper {
 
     /**
      * Translates an ItemStack to his Chat-Component equivalent
-     * 
+     *
      * @param item the item to be converted
      * @return a Chat-Component equivalent of the parameter
      */
@@ -194,7 +221,7 @@ public final class NmsBookHelper {
 
     /**
      * Translates a json string to his Chat-Component equivalent
-     * 
+     *
      * @param json the json string to be converted
      * @return a Chat-Component equivalent of the parameter
      */
@@ -204,7 +231,7 @@ public final class NmsBookHelper {
 
     /**
      * Translates an ItemStack to his json equivalent
-     * 
+     *
      * @param item the item to be converted
      * @return a json equivalent of the parameter
      */
@@ -243,7 +270,7 @@ public final class NmsBookHelper {
 
     /**
      * Gets the EntityPlayer handled by the argument
-     * 
+     *
      * @param player the Player handler
      * @return the handled class
      * @throws InvocationTargetException when some problems are found with the
@@ -257,7 +284,7 @@ public final class NmsBookHelper {
 
     /**
      * Creates a NMS copy of the parameter
-     * 
+     *
      * @param item the ItemStack to be nms-copied
      * @return a NMS-ItemStack that is the equivalent of the one passed as argument
      * @throws InvocationTargetException when some problems are found with the
