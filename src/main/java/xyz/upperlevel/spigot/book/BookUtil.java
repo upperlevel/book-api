@@ -89,11 +89,17 @@ public final class BookUtil {
         }
 
         /**
-         * Sets the title of the book
+         * Sets the title of the book.
+         *
+         * It should always be at most 32 characters.
+         *
          * @param title the title of the book
          * @return the BookBuilder's calling instance
          */
         public BookBuilder title(String title) {
+            if (title.length() > 32) {
+                throw new IllegalArgumentException("The book title must be at most 32 characters");
+            }
             meta.setTitle(title);
             return this;
         }
@@ -149,7 +155,7 @@ public final class BookUtil {
         }
 
         /**
-         * Sets the generation of the book
+         * Sets the generation of the book.
          * Only works from MC 1.10
          * @param generation the Book generation
          * @return the BookBuilder calling instance

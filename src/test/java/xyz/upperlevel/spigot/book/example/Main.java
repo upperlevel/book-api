@@ -26,7 +26,11 @@ public class Main extends JavaPlugin {
             if (sender instanceof Player) {
                 ItemStack book = createGeneralBook((Player) sender, args.length < 1 ? "" : args[0]);
 
-                BookUtil.openPlayer((Player) sender, book);
+                if (book != null) {
+                    BookUtil.openPlayer((Player) sender, book);
+                } else {
+                    sender.sendMessage("Subcommands: color, command, link, game, general or none");
+                }
             }
 
             return true;
@@ -34,6 +38,8 @@ public class Main extends JavaPlugin {
 
         private ItemStack createGeneralBook(Player p, String type) {
             switch (type.toLowerCase()) {
+                case "":
+                    return createPresentationBook(p);
                 case "color":
                     return createColorBook(p);
                 case "command":
@@ -45,7 +51,7 @@ public class Main extends JavaPlugin {
                 case "general":
                     return createGeneralBook(p);
                 default:
-                    return createPresentationBook(p);
+                    return null;
             }
         }
 
@@ -128,7 +134,7 @@ public class Main extends JavaPlugin {
                             new BookUtil.PageBuilder()
                                     .add(
                                             BookUtil.TextBuilder.of("Suicide")
-                                                    .onHover(BookUtil.HoverAction.showText("Wannt to try?"))
+                                                    .onHover(BookUtil.HoverAction.showText("Wanna try?"))
                                                     .onClick(BookUtil.ClickAction.runCommand("/kill"))
                                                     .color(ChatColor.RED)
                                                     .build()
