@@ -9,7 +9,7 @@ To include the API in your project put this into our pom.xml (maven)
   <dependency>
     <groupId>xyz.upperlevel.spigot.book</groupId>
     <artifactId>spigot-book-api</artifactId>
-    <version>1.4.1</version>
+    <version>1.4.2</version>
   </dependency>
 </dependencies>
 ```

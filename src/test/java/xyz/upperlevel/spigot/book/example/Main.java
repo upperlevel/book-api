@@ -29,7 +29,7 @@ public class Main extends JavaPlugin {
                 if (book != null) {
                     BookUtil.openPlayer((Player) sender, book);
                 } else {
-                    sender.sendMessage("Subcommands: color, command, link, game, general or none");
+                    sender.sendMessage("Subcommands: empty, color, command, link, game, general or none");
                 }
             }
 
@@ -40,6 +40,8 @@ public class Main extends JavaPlugin {
             switch (type.toLowerCase()) {
                 case "":
                     return createPresentationBook(p);
+                case "empty":
+                    return createEmptyBook(p);
                 case "color":
                     return createColorBook(p);
                 case "command":
@@ -53,6 +55,10 @@ public class Main extends JavaPlugin {
                 default:
                     return null;
             }
+        }
+
+        private ItemStack createEmptyBook(Player p) {
+            return BookUtil.writtenBook().build();
         }
 
         private ItemStack createColorBook(Player p) {

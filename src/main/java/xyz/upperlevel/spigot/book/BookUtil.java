@@ -170,6 +170,16 @@ public final class BookUtil {
          * @return the built book
          */
         public ItemStack build() {
+            // Prevent common causes of "Invalid Book Tag"
+            if (!meta.hasAuthor()) {
+                meta.setAuthor("");
+            }
+            if (!meta.hasTitle()) {
+                meta.setTitle("");
+            }
+            if (!meta.hasPages()) {
+                this.pages(new BaseComponent[]{});
+            }
             book.setItemMeta(meta);
             return book;
         }
