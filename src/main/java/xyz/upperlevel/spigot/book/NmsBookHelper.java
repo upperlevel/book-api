@@ -91,7 +91,7 @@ public final class NmsBookHelper {
             final Class<?> craftPlayerClass = getCraftClass("entity.CraftPlayer");
             craftPlayerGetHandle = craftPlayerClass.getMethod("getHandle");
 
-            final Class<?> entityPlayerClass = getNmsClass("EntityPlayer", "server.level", false);
+            final Class<?> entityPlayerClass = getNmsClass("EntityPlayer", "server.level", true);
             final Class<?> itemStackClass = getNmsClass("ItemStack", "world.item", true);
             if (doubleHands) {
                 final Class<?> enumHandClass = getNmsClass("EnumHand", "world", true);
@@ -116,9 +116,9 @@ public final class NmsBookHelper {
 
             final Class<?> craftItemStackClass = getCraftClass("inventory.CraftItemStack");
             craftItemStackAsNMSCopy = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-            Class<?> nbtTagCompoundClazz = getNmsClass("NBTTagCompound", "nbt", true);
-            nmsItemStackSave = itemStackClass.getMethod("save", nbtTagCompoundClazz);
-            nbtTagCompoundConstructor = nbtTagCompoundClazz.getConstructor();
+            Class<?> nbtTagCompoundClass = getNmsClass("NBTTagCompound", "nbt", true);
+            nmsItemStackSave = itemStackClass.getMethod("save", nbtTagCompoundClass);
+            nbtTagCompoundConstructor = nbtTagCompoundClass.getConstructor();
         } catch (Exception e) {
             throw new IllegalStateException("Cannot initiate reflections for " + version, e);
         }
@@ -138,13 +138,15 @@ public final class NmsBookHelper {
                 pages.clear();
             }
             for (BaseComponent[] c : components) {
-                final String json;
+                if(c == null){
+                    continue;
+                }
+                final String json = ComponentSerializer.toString(c);
                 if (craftMetaBookInternalAddPageMethod != null) {
-                    json = c != null ? ComponentSerializer.toString(c) : "";
                     craftMetaBookInternalAddPageMethod.invoke(meta, json);
-                } else {
-                    BaseComponent[] nonNullC = c != null ? c : jsonToComponents("");
-                    json = ComponentSerializer.toString(nonNullC);
+                }
+                else {
+                    // Are pages always not null pre 1.16?
                     pages.add(chatSerializerA.invoke(null, json));
                 }
             }
@@ -276,7 +278,7 @@ public final class NmsBookHelper {
      * @param required
      *     If an error message should be printed if the class is not found
      *
-     * @return Net Minecraft Server class. Either `net.minecraft.server.$className` if pre 1.17 or `net.minecraft.$post17middlePackage.$$className` if v1.17+
+     * @return Net Minecraft Server class. Either {@code net.minecraft.server.$className} if pre 1.17 or {@code net.minecraft.$post17middlePackage.$className} if v1.17+
      */
     public static Class<?> getNmsClass(String className, String post17middlePackage, boolean required) {
         Class<?> pre = getNmsClass(className, false);
