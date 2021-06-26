@@ -6,7 +6,7 @@
 
     <groupId>xyz.upperlevel.spigot.book</groupId>
     <artifactId>spigot-book-api</artifactId>
-    <version>1.4.3</version>
+    <version>1.5</version>
 
     <name>BookApi</name>
     <description>A low-level API for book control on spigot</description>
