@@ -288,7 +288,7 @@ public final class NmsBookHelper {
         return getNms17PlusClass(post17middlePackage + "." + className, required);
     }
 
-    public static Class<?> getNms17PlusClass(String className, boolean required) {
+    private static Class<?> getNms17PlusClass(String className, boolean required) {
         try {
             return Class.forName("net.minecraft." + className);
         } catch (ClassNotFoundException e) {
