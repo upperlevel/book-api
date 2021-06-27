@@ -77,9 +77,11 @@ public final class NmsBookHelper {
             }
             craftMetaBookInternalAddPageMethod = cmbInternalAddMethod;
 
-            Class<?> chatSerializer = getNmsClass("IChatBaseComponent$ChatSerializer", false);
+            Class<?> chatSerializer = getNmsClass("IChatBaseComponent$ChatSerializer", "network.chat", false);
             if (chatSerializer == null) {
-                chatSerializer = getNmsClass("ChatSerializer");
+                //ChatSerializer was renamed to IChatBaseComponent$ChatSerializer
+                // this class will only exists when below on version below 1.17
+                chatSerializer = getNmsClass("ChatSerializer", true);
             }
 
             // On versions < 1.16.4 the CraftMetaBook accepted IChatBaseComponent
@@ -89,10 +91,10 @@ public final class NmsBookHelper {
             final Class<?> craftPlayerClass = getCraftClass("entity.CraftPlayer");
             craftPlayerGetHandle = craftPlayerClass.getMethod("getHandle");
 
-            final Class<?> entityPlayerClass = getNmsClass("EntityPlayer");
-            final Class<?> itemStackClass = getNmsClass("ItemStack");
+            final Class<?> entityPlayerClass = getNmsClass("EntityPlayer", "server.level", true);
+            final Class<?> itemStackClass = getNmsClass("ItemStack", "world.item", true);
             if (doubleHands) {
-                final Class<?> enumHandClass = getNmsClass("EnumHand");
+                final Class<?> enumHandClass = getNmsClass("EnumHand", "world", true);
 
                 Method openBookMethod;
 
@@ -114,10 +116,9 @@ public final class NmsBookHelper {
 
             final Class<?> craftItemStackClass = getCraftClass("inventory.CraftItemStack");
             craftItemStackAsNMSCopy = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-            Class<?> nmsItemStackClazz = getNmsClass("ItemStack");
-            Class<?> nbtTagCompoundClazz = getNmsClass("NBTTagCompound");
-            nmsItemStackSave = nmsItemStackClazz.getMethod("save", nbtTagCompoundClazz);
-            nbtTagCompoundConstructor = nbtTagCompoundClazz.getConstructor();
+            Class<?> nbtTagCompoundClass = getNmsClass("NBTTagCompound", "nbt", true);
+            nmsItemStackSave = itemStackClass.getMethod("save", nbtTagCompoundClass);
+            nbtTagCompoundConstructor = nbtTagCompoundClass.getConstructor();
         } catch (Exception e) {
             throw new IllegalStateException("Cannot initiate reflections for " + version, e);
         }
@@ -137,13 +138,15 @@ public final class NmsBookHelper {
                 pages.clear();
             }
             for (BaseComponent[] c : components) {
-                final String json;
+                if(c == null){
+                    continue;
+                }
+                final String json = ComponentSerializer.toString(c);
                 if (craftMetaBookInternalAddPageMethod != null) {
-                    json = c != null ? ComponentSerializer.toString(c) : "";
                     craftMetaBookInternalAddPageMethod.invoke(meta, json);
-                } else {
-                    BaseComponent[] nonNullC = c != null ? c : jsonToComponents("");
-                    json = ComponentSerializer.toString(nonNullC);
+                }
+                else {
+                    // Are pages always not null pre 1.16?
                     pages.add(chatSerializerA.invoke(null, json));
                 }
             }
@@ -260,9 +263,34 @@ public final class NmsBookHelper {
         return craftItemStackAsNMSCopy.invoke(null, item);
     }
 
+    /**
+     * Use {@link #getNmsClass(String, String, boolean)} to make sure of compatibility with mc 1.17+.
+     */
     public static Class<?> getNmsClass(String className, boolean required) {
+        return getNms17PlusClass("server." + version + "." + className, required);
+    }
+
+    /**
+     * @param className
+     *     The simple name of the class
+     * @param post17middlePackage
+     *     The package the class have been relocated to after mc 1.17
+     * @param required
+     *     If an error message should be printed if the class is not found
+     *
+     * @return Net Minecraft Server class. Either {@code net.minecraft.server.$className} if pre 1.17 or {@code net.minecraft.$post17middlePackage.$className} if v1.17+
+     */
+    public static Class<?> getNmsClass(String className, String post17middlePackage, boolean required) {
+        Class<?> pre = getNmsClass(className, false);
+        if (pre != null) {
+            return pre;
+        }
+        return getNms17PlusClass(post17middlePackage + "." + className, required);
+    }
+
+    private static Class<?> getNms17PlusClass(String className, boolean required) {
         try {
-            return Class.forName("net.minecraft.server." + version + "." + className);
+            return Class.forName("net.minecraft." + className);
         } catch (ClassNotFoundException e) {
             if (required) {
                 throw new RuntimeException("Cannot find NMS class " + className, e);
@@ -271,6 +299,10 @@ public final class NmsBookHelper {
         }
     }
 
+    /**
+     * @deprecated Specify if required or not with (preferably) {@link #getNmsClass(String, String, boolean)} or {@link #getNmsClass(String, boolean)}
+     */
+    @Deprecated
     public static Class<?> getNmsClass(String className) {
         return getNmsClass(className, false);
     }
