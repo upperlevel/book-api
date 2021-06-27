@@ -265,6 +265,11 @@ public final class NmsBookHelper {
 
     /**
      * Use {@link #getNmsClass(String, String, boolean)} to make sure of compatibility with mc 1.17+.
+     * @param className
+     *     The simple name of the class
+     * @param required
+     *     If true a {@link RuntimeException} will be thrown when the class cannot be found
+     * @return Net Minecraft Server class with the provided name or null (if not required)
      */
     public static Class<?> getNmsClass(String className, boolean required) {
         return getNms17PlusClass("server." + version + "." + className, required);
@@ -276,7 +281,7 @@ public final class NmsBookHelper {
      * @param post17middlePackage
      *     The package the class have been relocated to after mc 1.17
      * @param required
-     *     If an error message should be printed if the class is not found
+     *     If true a {@link RuntimeException} will be thrown when the class cannot be found
      *
      * @return Net Minecraft Server class. Either {@code net.minecraft.server.$className} if pre 1.17 or {@code net.minecraft.$post17middlePackage.$className} if v1.17+
      */
@@ -300,6 +305,11 @@ public final class NmsBookHelper {
     }
 
     /**
+     *
+     * @param className
+     *      The simple name of the class
+     * @return Net Minecraft Server class with the provided name or null.
+     *
      * @deprecated Specify if required or not with (preferably) {@link #getNmsClass(String, String, boolean)} or {@link #getNmsClass(String, boolean)}
      */
     @Deprecated
