@@ -25,13 +25,6 @@ public class CustomBookOpenEvent extends Event implements Cancellable {
     private final Player player;
 
     /**
-     * The hand used to open the book (the previous item will be restored after the opening)
-     */
-    @Getter
-    @Setter
-    private Hand hand;
-
-    /**
      * The actual book to be opened
      */
     @Getter
@@ -41,7 +34,6 @@ public class CustomBookOpenEvent extends Event implements Cancellable {
     public CustomBookOpenEvent(Player player, ItemStack book, boolean offHand) {
         this.player = player;
         this.book = book;
-        this.hand = offHand ? Hand.OFF_HAND : Hand.MAIN_HAND;
     }
 
     @Override
@@ -51,9 +43,5 @@ public class CustomBookOpenEvent extends Event implements Cancellable {
 
     public static HandlerList getHandlerList() {
         return handlers;
-    }
-
-    public enum Hand {
-        MAIN_HAND, OFF_HAND
     }
 }

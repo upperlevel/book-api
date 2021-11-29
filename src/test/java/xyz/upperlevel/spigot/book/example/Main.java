@@ -1,23 +1,39 @@
 package xyz.upperlevel.spigot.book.example;
 
 import net.md_5.bungee.api.chat.*;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.SpawnEggMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import xyz.upperlevel.spigot.book.BookUtil;
 
-public class Main extends JavaPlugin {
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
         getCommand("booktest").setExecutor(new BookTestCommand());
+        Bukkit.getServer().getPluginManager().registerEvents(this, this);
+    }
+
+    @EventHandler
+    private void onJoin(PlayerJoinEvent e) {
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            e.getPlayer().sendMessage("Opening page...");
+            BookUtil.openPlayer(e.getPlayer(), new BookTestCommand().createPresentationBook(e.getPlayer()));
+        }, 1);
     }
 
     public class BookTestCommand implements CommandExecutor {
@@ -122,14 +138,6 @@ public class Main extends JavaPlugin {
                             .build()
                     )
                     .build();
-        }
-
-        private ItemStack getHorseItem() {
-            ItemStack item = new ItemStack(Material.MONSTER_EGG);
-            SpawnEggMeta meta = (SpawnEggMeta) item.getItemMeta();
-            meta.setSpawnedType(EntityType.HORSE);
-            item.setItemMeta(meta);
-            return item;
         }
 
         private ItemStack createCommandBook(Player p) {
@@ -271,6 +279,24 @@ public class Main extends JavaPlugin {
                     .build();
         }
 
+        private ItemStack getExampleItemStack() {
+            ItemStack itemStack = new ItemStack(Material.DIAMOND_SWORD);
+            ItemMeta meta = itemStack.getItemMeta();
+            List<String> lore = new ArrayList<String>();
+
+            // Let's give this diamond sword a cool name and some lore
+            meta.setDisplayName(ChatColor.YELLOW + "Super Sword");
+            lore.add(ChatColor.RED + "This is a great sword!");
+            meta.setLore(lore);
+
+            // ...and some powerful enchantments
+            meta.addEnchant(Enchantment.DAMAGE_ALL, 5, true);
+            meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
+
+            itemStack.setItemMeta(meta);
+            return itemStack;
+        }
+
         private ItemStack createPresentationBook(Player p) {
             return BookUtil.writtenBook()
                     .author("SnowyCoder")
@@ -362,7 +388,11 @@ public class Main extends JavaPlugin {
                                                     .build()
                                     )
                                     .newLine()
-                                    .add("This book has a second page!")
+                                    .add(
+                                            BookUtil.TextBuilder.of("This book has a second page!")
+                                                    .onHover(BookUtil.HoverAction.showItem(getExampleItemStack()))
+                                                    .build()
+                                    )
                                     .newLine()
                                     .add(
                                             BookUtil.TextBuilder.of("Go back")

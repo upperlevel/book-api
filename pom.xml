@@ -6,7 +6,7 @@
 
     <groupId>xyz.upperlevel.spigot.book</groupId>
     <artifactId>spigot-book-api</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
 
     <name>BookApi</name>
     <description>A low-level API for book control on spigot</description>
@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <mc-version>1.12-pre6-SNAPSHOT</mc-version>
+        <mc-version>1.17.1-R0.1-SNAPSHOT</mc-version>
     </properties>
 
     <repositories>
@@ -34,18 +34,11 @@
             <version>${mc-version}</version>
             <scope>provided</scope>
         </dependency>
-        <!--Bukkit API-->
-        <dependency>
-            <groupId>org.bukkit</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>${mc-version}</version>
-            <scope>provided</scope>
-        </dependency>
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.16</version>
+            <version>1.18.22</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

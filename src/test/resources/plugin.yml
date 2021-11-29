@@ -6,3 +6,4 @@ commands:
   booktest:
     description: Tests the bookapi
     usage: /booktest [color|hover|command|link|game|general]
+api-version: 1.13

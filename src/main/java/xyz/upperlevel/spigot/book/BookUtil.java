@@ -9,7 +9,6 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -17,11 +16,15 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
+import xyz.upperlevel.spigot.book.internals.BookHelper;
+import xyz.upperlevel.spigot.book.internals.NmsBookHelper;
+import xyz.upperlevel.spigot.book.internals.SpigotBookHelper;
 
 import java.util.*;
 
 public final class BookUtil {
     private static final boolean canTranslateDirectly;
+    private static final BookHelper helper;
 
     static {
         boolean success = true;
@@ -31,6 +34,12 @@ public final class BookUtil {
             success = false;
         }
         canTranslateDirectly = success;
+
+        if (SpigotBookHelper.isSupported()) {
+            helper = new SpigotBookHelper();
+        } else {
+            helper = new NmsBookHelper();
+        }
     }
 
 
@@ -55,7 +64,7 @@ public final class BookUtil {
         p.updateInventory();
 
         //Opening the GUI
-        NmsBookHelper.openBook(p, event.getBook(), event.getHand() == CustomBookOpenEvent.Hand.OFF_HAND);
+        helper.openBook(p, event.getBook());
 
         //Returning whatever was on hand.
         p.setItemInHand(hand);
@@ -140,7 +149,7 @@ public final class BookUtil {
          * @return the BookBuilder's calling instance
          */
         public BookBuilder pages(BaseComponent[]... pages) {
-            NmsBookHelper.setPages(meta, pages);
+            helper.setPages(meta, pages);
             return this;
         }
 
@@ -150,7 +159,7 @@ public final class BookUtil {
          * @return the BookBuilder's calling instance
          */
         public BookBuilder pages(List<BaseComponent[]> pages) {
-            NmsBookHelper.setPages(meta, pages.toArray(new BaseComponent[0][]));
+            helper.setPages(meta, pages.toArray(new BaseComponent[0][]));
             return this;
         }
 
@@ -488,7 +497,7 @@ public final class BookUtil {
          * @return a new HoverAction instance
          */
         static HoverAction showItem(ItemStack item) {
-            return new SimpleHoverAction(HoverEvent.Action.SHOW_ITEM, NmsBookHelper.itemToComponents(item));
+            return new SimpleHoverAction(HoverEvent.Action.SHOW_ITEM, helper.itemToComponents(item));
         }
 
         /**
@@ -509,9 +518,7 @@ public final class BookUtil {
          */
         static HoverAction showEntity(UUID uuid, String type, String name) {
             return new SimpleHoverAction(HoverEvent.Action.SHOW_ENTITY,
-                    NmsBookHelper.jsonToComponents(
-                            "{id:\"" + uuid + "\",type:\"" + type + "\"name:\"" + name + "\"}"
-                    )
+                    new TextComponent("{id:\"" + uuid + "\",type:\"" + type + "\"name:\"" + name + "\"}")
             );
         }
 
@@ -531,15 +538,6 @@ public final class BookUtil {
          */
         static HoverAction showAchievement(String achievementId) {
             return new SimpleHoverAction(HoverEvent.Action.SHOW_ACHIEVEMENT, new TextComponent("achievement." + achievementId));
-        }
-
-        /**
-         * Creates a show_achievement action: when the component is hovered the achievement information will be displayed
-         * @param achievement the achievement to display
-         * @return a new HoverAction instance
-         */
-        static HoverAction showAchievement(Achievement achievement) {
-            return showAchievement(AchievementUtil.toId(achievement));
         }
 
         /**
